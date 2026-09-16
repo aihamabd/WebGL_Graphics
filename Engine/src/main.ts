@@ -3,7 +3,7 @@ import './style.css'
 import vertexShaderSource from './shaders/vertexShader.vert.glsl?raw'
 import fragmentShaderSource from './shaders/fragmentShader.frag.glsl?raw'
 
-import { glMatrix, mat4, type mat4 as Mat4Type} from 'gl-matrix';
+import { glMatrix, mat4 } from 'gl-matrix';
 import { Pyramid3D } from './pyramid.ts';
 import { Camera } from './camera.ts';
 class Renderer {
