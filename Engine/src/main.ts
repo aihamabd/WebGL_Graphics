@@ -1,60 +1,177 @@
 import './style.css'
-import heroImg from './assets/hero.png'
-import typescriptLogo from './assets/typescript.svg'
-import viteLogo from './assets/vite.svg'
-import { setupCounter } from './counter.ts'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${typescriptLogo}" class="framework" alt="TypeScript logo"/>
-    <img src="${viteLogo}" class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.ts</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+import vertexShaderSource from './shaders/vertexShader.vert.glsl?raw'
+import fragmentShaderSource from './shaders/fragmentShader.frag.glsl?raw'
 
-<div class="ticks"></div>
+import { glMatrix, mat4, type mat4 as Mat4Type} from 'gl-matrix';
+import { Pyramid3D } from './pyramid.ts';
+import { Camera } from './camera.ts';
+class Renderer {
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src="${viteLogo}" alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://www.typescriptlang.org" target="_blank">
-          <img class="button-icon" src="${typescriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+    public gl;
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+    private canvas;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+    private program;
+    private shapes;
+    private projectionMatrix;
+    private viewMatrix;
+    private worldMatrix;
+    private angle;
+
+    private mProjectionUniformLoc;
+    private mViewUniformLoc;
+    private mWorldUniformLoc;
+
+    public camera;
+    constructor() {
+
+        this.angle = 0;
+        this.shapes = [];
+
+        this.camera = new Camera();
+
+        this.canvas = document.getElementById('glcanvas') as HTMLCanvasElement;
+        this.gl = this.canvas.getContext('webgl2') as WebGL2RenderingContext;
+
+        this.gl.enable(this.gl.DEPTH_TEST);
+
+        const vertexShader = this.compileShader(this.gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = this.compileShader(this.gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+        this.program = this.linkProgram(vertexShader, fragmentShader);
+        this.gl.useProgram(this.program);
+
+        this.shapes.push(new Pyramid3D(this.gl, this.program));
+
+        this.projectionMatrix = mat4.create();
+        this.viewMatrix = mat4.create();
+        this.worldMatrix = mat4.create();
+
+        this.mProjectionUniformLoc = this.gl.getUniformLocation(this.program, 'mProjection') as WebGLUniformLocation;
+        this.mViewUniformLoc = this.gl.getUniformLocation(this.program, 'mView') as WebGLUniformLocation;
+        this.mWorldUniformLoc = this.gl.getUniformLocation(this.program, 'mWorld') as WebGLUniformLocation;
+    }
+
+    private compileShader(type: number, source: string): WebGLShader {
+
+        const shader = this.gl.createShader(type);
+        if (!shader) throw new Error('Failed to create shader');
+
+        this.gl.shaderSource(shader, source);
+        this.gl.compileShader(shader);
+
+        if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
+
+            const info = this.gl.getShaderInfoLog(shader);
+            this.gl.deleteShader(shader);
+            throw new Error(`Shader compile error: ${info}`);
+        }
+
+        return shader;
+    }
+
+    private linkProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
+
+        const program = this.gl.createProgram();
+        if (!program) throw new Error('Failed to create program');
+
+        this.gl.attachShader(program, vertexShader);
+        this.gl.attachShader(program, fragmentShader);
+        this.gl.linkProgram(program);
+
+        if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
+
+            const info = this.gl.getProgramInfoLog(program);
+            this.gl.deleteProgram(program);
+            throw new Error(`Program link error: ${info}`);
+        }
+
+        return program;
+    }
+
+    public render(dt: number) {
+
+        this.angle += dt;
+
+        mat4.identity(this.worldMatrix);
+        mat4.rotateY(this.worldMatrix, this.worldMatrix, this.angle);
+        this.camera.getViewMatrix(this.viewMatrix);
+        mat4.perspective(this.projectionMatrix, glMatrix.toRadian(45), this.canvas.width / this.canvas.height, 0.1, 1000.0);
+
+        this.gl.uniformMatrix4fv(this.mWorldUniformLoc, false, this.worldMatrix);
+        this.gl.uniformMatrix4fv(this.mViewUniformLoc, false, this.viewMatrix);
+        this.gl.uniformMatrix4fv(this.mProjectionUniformLoc, false, this.projectionMatrix);
+
+        this.gl.clearColor(0, 0, 0, 1);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+        this.gl.useProgram(this.program);
+
+        this.shapes.forEach((shape) => {
+            shape.draw();
+        });
+    }
+}
+
+const renderer = new Renderer();
+const pressedKeys = new Set<string>();
+
+let lastTime: number = 0;
+function mainLoop(currentTime: number) {
+
+    const dt = (currentTime - lastTime) / 1000;
+    lastTime = currentTime;
+
+    renderer.render(dt);
+    renderer.camera.update(dt, moveInput);
+
+    requestAnimationFrame(mainLoop);
+}
+
+requestAnimationFrame(mainLoop);
+
+const moveInput = { forward: 0, right: 0, up: 0 };
+
+function updateMoveInput() {
+
+    moveInput.forward = (pressedKeys.has('KeyW') ? 1 : 0) - (pressedKeys.has('KeyS') ? 1 : 0);
+    moveInput.right = (pressedKeys.has('KeyD') ? 1 : 0) - (pressedKeys.has('KeyA') ? 1 : 0);
+    moveInput.up = (pressedKeys.has('Space') ? 1 : 0) - (pressedKeys.has('ShiftLeft') ? 1 : 0);
+}
+
+document.addEventListener('keydown', (e) => {
+    pressedKeys.add(e.code);
+    updateMoveInput();
+});
+
+document.addEventListener('keyup', (e) => {
+    pressedKeys.delete(e.code);
+    updateMoveInput();
+});
+
+const canvas = document.getElementById('glcanvas') as HTMLCanvasElement;
+
+canvas.addEventListener('click', () => {
+
+    canvas.requestPointerLock();
+});
+
+document.addEventListener('mousemove', (e) => {
+
+    if (document.pointerLockElement !== canvas) return;
+
+    const sensitivity = 0.1;
+    renderer.camera.look(e.movementX * sensitivity, e.movementY * sensitivity);
+});
+
+function resizeCanvas() {
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    renderer.gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+resizeCanvas();

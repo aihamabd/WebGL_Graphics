@@ -30,7 +30,7 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
     --text: #9ca3af;
     --text-h: #f3f4f6;
@@ -50,8 +50,16 @@
   }
 }
 
-body {
-  margin: 0;
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#glcanvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
 }
 
 h1,
@@ -96,6 +104,20 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+.flex {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.glcanvas {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 3px;
 }
 
 .counter {

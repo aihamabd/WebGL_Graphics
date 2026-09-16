@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/aihamabd/WebGL_Graphics/issues"
   },
-  "homepage": "https://github.com/aihamabd/WebGL_Graphics#readme"
+  "homepage": "https://github.com/aihamabd/WebGL_Graphics#readme",
+  "dependencies": {
+    "gl-matrix": "^3.4.4"
+  }
 }
