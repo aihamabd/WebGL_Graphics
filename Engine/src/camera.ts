@@ -78,13 +78,20 @@ export class Camera {
         vec3.scaleAndAdd(move, move, worldUp, input.up * this.moveSpeed * dt);
 
         vec3.add(this.position, this.position, move);
+
+        this.position[1] = Math.max(this.position[1], 0.5);
+
+        const worldHalfExtent = 9.75; // adjust to match your grid/ground size
+
+        this.position[0] = Math.max(-worldHalfExtent, Math.min(worldHalfExtent, this.position[0]));
+        this.position[2] = Math.max(-worldHalfExtent, Math.min(worldHalfExtent, this.position[2]));
     }
 
     public look(deltaYaw: number, deltaPitch: number) {
 
         this.yaw += deltaYaw;
         this.pitch -= deltaPitch;
-        this.pitch = Math.max(-89, Math.min(89, this.pitch));
+        this.pitch = Math.max(-89.9, Math.min(89.9, this.pitch));
     }
 
     public getViewMatrix(out: mat4): mat4 {

@@ -14,7 +14,7 @@ export class Pyramid3D {
         [3, 0, 4],
     ];
 
-    private static readonly DEFAULT_POSITIONS: [number, number, number][] = [
+    private static readonly CORNERS: [number, number, number][] = [
 
         [-0.5, 0.0, -0.5],  // back-left
         [0.5, 0.0, -0.5],  // back-right
@@ -25,18 +25,18 @@ export class Pyramid3D {
 
     private static readonly DEFAULT_COLORS: [number, number, number][] = [
 
-        [1, 0, 0],  // red
-        [1, 0, 0],  // red
-        [0, 1, 0],  // green
-        [0, 0, 1],  // blue
-        [1, 1, 0],  // yellow
-        [1, 0, 1],  // magenta
+        [1, 1, 0],  // base
+        [1, 1, 0],  // base
+        [0, 0, 1],
+        [0, 1, 1],
+        [0, 1, 0],
+        [1, 0, 0],
     ];
 
     constructor(
         gl: WebGL2RenderingContext,
         program: WebGLProgram,
-        positions: [number, number, number][] = Pyramid3D.DEFAULT_POSITIONS,
+        positions: [number, number, number][] = Pyramid3D.CORNERS,
         colors: [number, number, number][] = Pyramid3D.DEFAULT_COLORS
     ) {
 
@@ -68,7 +68,7 @@ export class Pyramid3D {
         this.vao = vao;
         gl.bindVertexArray(vao);
 
-        // After binding the VAO, pass the V-Buffer and I-Buffer into the shader program.
+        // After binding the VAO, pass the V-Buffer into the shader program.
 
         const vbo = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, vbo);

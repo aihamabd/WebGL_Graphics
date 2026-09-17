@@ -3,9 +3,12 @@ import './style.css'
 import vertexShaderSource from './shaders/vertexShader.vert.glsl?raw'
 import fragmentShaderSource from './shaders/fragmentShader.frag.glsl?raw'
 
-import { glMatrix, mat4, type mat4 as Mat4Type} from 'gl-matrix';
-import { Pyramid3D } from './pyramid.ts';
+import { glMatrix, mat4 } from 'gl-matrix';
+import { Cube3D } from './cube.ts';
 import { Camera } from './camera.ts';
+import { Pyramid3D } from './pyramid.ts';
+import { playerController } from './playerController.ts';
+import { Grid } from './grid.ts';
 class Renderer {
 
     public gl;
@@ -43,6 +46,10 @@ class Renderer {
         this.gl.useProgram(this.program);
 
         this.shapes.push(new Pyramid3D(this.gl, this.program));
+        this.shapes.push(new Cube3D(this.gl, this.program, [2, 0.5, 2], 1, 1, 1));
+        this.shapes.push(new Cube3D(this.gl, this.program, [-2, 0.5, -2], 1, 1, 1));
+        this.shapes.push(new Cube3D(this.gl, this.program, [0, -0.02, 0], 20, 0.02, 20, Array(6).fill([0.25, 0.25, 0.27])));
+        this.shapes.push(new Grid(this.gl, this.program, 20, 10, 0));
 
         this.projectionMatrix = mat4.create();
         this.viewMatrix = mat4.create();
@@ -92,7 +99,7 @@ class Renderer {
 
     public render(dt: number) {
 
-        this.angle += dt;
+        this.angle += 0;
 
         mat4.identity(this.worldMatrix);
         mat4.rotateY(this.worldMatrix, this.worldMatrix, this.angle);
@@ -103,12 +110,13 @@ class Renderer {
         this.gl.uniformMatrix4fv(this.mViewUniformLoc, false, this.viewMatrix);
         this.gl.uniformMatrix4fv(this.mProjectionUniformLoc, false, this.projectionMatrix);
 
-        this.gl.clearColor(0, 0, 0, 1);
+        this.gl.clearColor(0.08, 0.08, 0.12, 1)
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         this.gl.useProgram(this.program);
 
         this.shapes.forEach((shape) => {
+
             shape.draw();
         });
     }
@@ -118,10 +126,15 @@ const renderer = new Renderer();
 const pressedKeys = new Set<string>();
 
 let lastTime: number = 0;
+
+const player = new playerController(0.5);
 function mainLoop(currentTime: number) {
 
     const dt = (currentTime - lastTime) / 1000;
     lastTime = currentTime;
+
+    const verticalDelta = player.getVerticalDelta(dt, renderer.camera.position[1]);
+    moveInput.up = verticalDelta / (renderer.camera.moveSpeed * dt); // undo the moveSpeed*dt scaling Camera.update applies
 
     renderer.render(dt);
     renderer.camera.update(dt, moveInput);
@@ -137,15 +150,21 @@ function updateMoveInput() {
 
     moveInput.forward = (pressedKeys.has('KeyW') ? 1 : 0) - (pressedKeys.has('KeyS') ? 1 : 0);
     moveInput.right = (pressedKeys.has('KeyD') ? 1 : 0) - (pressedKeys.has('KeyA') ? 1 : 0);
-    moveInput.up = (pressedKeys.has('Space') ? 1 : 0) - (pressedKeys.has('ShiftLeft') ? 1 : 0);
+    // moveInput.up = (pressedKeys.has('Space') ? 1 : 0) - (pressedKeys.has('ShiftLeft') ? 1 : 0);
 }
 
 document.addEventListener('keydown', (e) => {
+
     pressedKeys.add(e.code);
     updateMoveInput();
+
+    if (e.code === 'Space') {
+        player.jump(renderer.camera.position[1]);
+    }
 });
 
 document.addEventListener('keyup', (e) => {
+
     pressedKeys.delete(e.code);
     updateMoveInput();
 });
@@ -161,10 +180,14 @@ document.addEventListener('mousemove', (e) => {
 
     if (document.pointerLockElement !== canvas) return;
 
-    const sensitivity = 0.1;
-    renderer.camera.look(e.movementX * sensitivity, e.movementY * sensitivity);
-});
+    const maxDelta = 50;
 
+    const dx = Math.max(-maxDelta, Math.min(maxDelta, e.movementX));
+    const dy = Math.max(-maxDelta, Math.min(maxDelta, e.movementY));
+
+    const sensitivity = 0.1;
+    renderer.camera.look(dx * sensitivity, dy * sensitivity);
+});
 function resizeCanvas() {
 
     canvas.width = window.innerWidth;
