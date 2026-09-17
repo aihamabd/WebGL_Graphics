@@ -99,10 +99,10 @@ class Renderer {
 
     public render(dt: number) {
 
-        this.angle += 0;
+        this.angle += dt;
 
         mat4.identity(this.worldMatrix);
-        mat4.rotateY(this.worldMatrix, this.worldMatrix, this.angle);
+        mat4.rotateY(this.worldMatrix, this.worldMatrix, 0);
         this.camera.getViewMatrix(this.viewMatrix);
         mat4.perspective(this.projectionMatrix, glMatrix.toRadian(45), this.canvas.width / this.canvas.height, 0.1, 1000.0);
 
