@@ -1,19 +1,27 @@
-export class Grid {
+import { Shape3D } from './shape3D';
 
-    public vao: WebGLVertexArrayObject;
-    private gl: WebGL2RenderingContext;
-    private vertexCount: number;
+export class Grid extends Shape3D {
 
     constructor(
         gl: WebGL2RenderingContext,
         program: WebGLProgram,
-        size: number = 50,        // total width/depth of the grid
-        divisions: number = 50,   // number of grid cells per side
-        y: number = 0,            // height of the grid plane
+        size: number = 50,
+        divisions: number = 50,
+        y: number = 0,
         color: [number, number, number] = [0.15, 0.15, 0.15]
     ) {
 
-        this.gl = gl;
+        const vertexData = Grid.buildVertexData(size, divisions, y, color);
+
+        super(gl, program, vertexData, { drawMode: gl.LINES });
+    }
+
+    private static buildVertexData(
+        size: number,
+        divisions: number,
+        y: number,
+        color: [number, number, number]
+    ): number[] {
 
         const [r, g, b] = color;
         const half = size / 2;
@@ -21,51 +29,22 @@ export class Grid {
 
         const vertexData: number[] = [];
 
-        // lines running along X (varying Z)
         for (let i = 0; i <= divisions; i++) {
 
             const z = -half + i * step;
 
-            vertexData.push(-half, y, z, r, g, b);
-            vertexData.push(half, y, z, r, g, b);
+            vertexData.push(-half, y, z, r, g, b, 0, 0);
+            vertexData.push(half, y, z, r, g, b, 0, 0);
         }
 
-        // lines running along Z (varying X)
         for (let i = 0; i <= divisions; i++) {
 
             const x = -half + i * step;
 
-            vertexData.push(x, y, -half, r, g, b);
-            vertexData.push(x, y, half, r, g, b);
+            vertexData.push(x, y, -half, r, g, b, 0, 0);
+            vertexData.push(x, y, half, r, g, b, 0, 0);
         }
 
-        const vertices = new Float32Array(vertexData);
-        this.vertexCount = vertices.length / 6;
-
-        const vao = gl.createVertexArray();
-        if (!vao) throw new Error('Failed to create VAO');
-        this.vao = vao;
-        gl.bindVertexArray(vao);
-
-        const vbo = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-        const positionLoc = gl.getAttribLocation(program, 'vertexPosition');
-        const colorLoc = gl.getAttribLocation(program, 'vertexColor');
-
-        gl.enableVertexAttribArray(positionLoc);
-        gl.enableVertexAttribArray(colorLoc);
-
-        gl.vertexAttribPointer(positionLoc, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
-        gl.vertexAttribPointer(colorLoc, 3, gl.FLOAT, false, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-
-        gl.bindVertexArray(null);
-    }
-
-    public draw() {
-
-        this.gl.bindVertexArray(this.vao);
-        this.gl.drawArrays(this.gl.LINES, 0, this.vertexCount);
+        return vertexData;
     }
 }

@@ -1,14 +1,22 @@
 import './style.css'
 
+import oiCatTexture from './assets/Muchkin2_baseColor.png';
+
+import suzzaneObjRaw from './assets/suzanne.obj?raw';
+import catObjRaw from './assets/oiiaioooooiai_cat.obj?raw';
+
 import vertexShaderSource from './shaders/vertexShader.vert.glsl?raw'
 import fragmentShaderSource from './shaders/fragmentShader.frag.glsl?raw'
 
 import { glMatrix, mat4 } from 'gl-matrix';
-import { Cube3D } from './cube.ts';
-import { Camera } from './camera.ts';
-import { Pyramid3D } from './pyramid.ts';
-import { playerController } from './playerController.ts';
-import { Grid } from './grid.ts';
+
+import { Camera } from './camera';
+import { playerController } from './playerController';
+
+import { Pyramid3D } from './pyramid3D';
+import { Cube3D } from './cube3D';
+import { Grid } from './grid';
+import { ObjModel3D } from './objModel3D';
 class Renderer {
 
     public gl;
@@ -45,12 +53,6 @@ class Renderer {
         this.program = this.linkProgram(vertexShader, fragmentShader);
         this.gl.useProgram(this.program);
 
-        this.shapes.push(new Pyramid3D(this.gl, this.program));
-        this.shapes.push(new Cube3D(this.gl, this.program, [2, 0.5, 2], 1, 1, 1));
-        this.shapes.push(new Cube3D(this.gl, this.program, [-2, 0.5, -2], 1, 1, 1));
-        this.shapes.push(new Cube3D(this.gl, this.program, [0, -0.02, 0], 20, 0.02, 20, Array(6).fill([0.25, 0.25, 0.27])));
-        this.shapes.push(new Grid(this.gl, this.program, 20, 10, 0));
-
         this.projectionMatrix = mat4.create();
         this.viewMatrix = mat4.create();
         this.worldMatrix = mat4.create();
@@ -58,6 +60,20 @@ class Renderer {
         this.mProjectionUniformLoc = this.gl.getUniformLocation(this.program, 'mProjection') as WebGLUniformLocation;
         this.mViewUniformLoc = this.gl.getUniformLocation(this.program, 'mView') as WebGLUniformLocation;
         this.mWorldUniformLoc = this.gl.getUniformLocation(this.program, 'mWorld') as WebGLUniformLocation;
+
+        this.shapes.push(new Pyramid3D(this.gl, this.program)
+            .setOrigin([2, -2, 2])
+            .setRotationSpeed([0, 1, 0]));
+        this.shapes.push(new Cube3D(this.gl, this.program, 20, 0.02, 20, Array(6).fill([0.25, 0.25, 0.27]))
+            .setOrigin([0, -0.02, 0]));
+        this.shapes.push(new Grid(this.gl, this.program, 20, 10, 0));
+        this.shapes.push(new ObjModel3D(this.gl, this.program, catObjRaw, { textureUrl: oiCatTexture })
+            .setOrigin([0, 0, 0])
+            .setRotationSpeed([0, 2, 0])
+            .setScale([3, 3, 3]));
+        this.shapes.push(new ObjModel3D(this.gl, this.program, suzzaneObjRaw)
+            .setOrigin([-2, 2, -2])
+            .setRotationSpeed([1, 1, 1]));
     }
 
     private compileShader(type: number, source: string): WebGLShader {
@@ -117,6 +133,9 @@ class Renderer {
 
         this.shapes.forEach((shape) => {
 
+            this.gl.uniformMatrix4fv(this.mWorldUniformLoc, false, shape.getModelMatrix());
+
+            shape.updateRotation(dt);
             shape.draw();
         });
     }
@@ -136,8 +155,8 @@ function mainLoop(currentTime: number) {
     const verticalDelta = player.getVerticalDelta(dt, renderer.camera.position[1]);
     moveInput.up = verticalDelta / (renderer.camera.moveSpeed * dt); // undo the moveSpeed*dt scaling Camera.update applies
 
-    renderer.render(dt);
     renderer.camera.update(dt, moveInput);
+    renderer.render(dt);
 
     requestAnimationFrame(mainLoop);
 }
