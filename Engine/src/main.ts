@@ -209,8 +209,14 @@ document.addEventListener('mousemove', (e) => {
 });
 function resizeCanvas() {
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+
     renderer.gl.viewport(0, 0, canvas.width, canvas.height);
 }
 
