@@ -10,39 +10,3 @@ html, body {
     width: 100vw;
     height: 100vh;
 }
-
-#crosshair {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 36px;
-    height: 36px;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 10;
-}
-
-    #crosshair::before,
-    #crosshair::after {
-        content: '';
-        position: absolute;
-        background: white;
-    }
-
-    #crosshair::before {
-        /* horizontal line */
-        top: 50%;
-        left: 0;
-        width: 100%;
-        height: 5px;
-        transform: translateY(-50%);
-    }
-
-    #crosshair::after {
-        /* vertical line */
-        left: 50%;
-        top: 0;
-        width: 5px;
-        height: 100%;
-        transform: translateX(-50%);
-    }

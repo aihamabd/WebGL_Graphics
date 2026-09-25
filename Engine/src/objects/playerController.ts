@@ -14,7 +14,7 @@ export class playerController {
         groundY: number = 0.5,
         gravity: number = -9.8,
         jumpForce: number = 3.5,
-        flightSpeed: number = 12,
+        flightSpeed: number = 15,
         movementSpeed: number = 1
     ) {
 

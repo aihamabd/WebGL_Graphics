@@ -12,7 +12,6 @@ import marioTexture from '../assets/tripo_material_8ae6e7ff-9af6-41f8-923f-8025e
 import suzzaneObjRaw from '../assets/suzanne.obj?raw';
 import catObjRaw from '../assets/oiiaioooooiai_cat.obj?raw';
 import spaceShipObjRaw from '../assets/light_fighter_spaceship_-_free_-.obj?raw';
-// import robotObjRaw from './assets/cyborg_girl.obj?raw';
 import marioObjRaw from '../assets/mario_mini.obj?raw';
 
 export let mainScene = new Scene();
@@ -33,10 +32,6 @@ mainScene.shapes.push(new ObjModel3D(suzzaneObjRaw)
 mainScene.addShape(new ObjModel3D(spaceShipObjRaw)
     .setOrigin([2, 2, 2])
     .setRotationSpeed([0, 1, 0]));
-// this.shapes.push(new ObjModel3D(this.gl, this.program, robotObjRaw)
-//     .setOrigin([2, 0, 2])
-//     .setRotation([Math.PI / 2, 0, 0])
-//     .setScale([0.04, 0.04, 0.04]));
 mainScene.addShape(new ObjModel3D(marioObjRaw, { textureUrl: marioTexture })
     .setOrigin([0, 0.5, 5])
     .setRotationSpeed([0, 2, 0])

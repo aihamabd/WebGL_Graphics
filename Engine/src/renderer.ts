@@ -107,7 +107,7 @@ export class Renderer {
         this.gl.uniformMatrix4fv(this.mViewUniformLoc, false, this.viewMatrix);
         this.gl.uniformMatrix4fv(this.mProjectionUniformLoc, false, this.projectionMatrix);
 
-        this.gl.clearColor(0.08, 0.08, 0.12, 1)
+        this.gl.clearColor(0.05, 0.04, 0.1, 1)
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
         this.gl.useProgram(this.program);
@@ -121,7 +121,6 @@ export class Renderer {
                 shape.updateRotation(dt);
                 shape.draw(this.gl, this.program);
             });
-
         }
     }
 }

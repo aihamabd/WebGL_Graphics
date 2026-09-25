@@ -1,7 +1,6 @@
-import './style.css'
+import './style.css';
 
 import { playerController } from './objects/playerController';
-
 import { Renderer } from './renderer';
 // import { mainScene } from './scenes/mainScene';
 import { testScene } from './scenes/testScene';
@@ -9,13 +8,33 @@ import { testScene } from './scenes/testScene';
 const renderer = new Renderer(document.getElementById('glcanvas') as HTMLCanvasElement);
 const pressedKeys = new Set<string>();
 
-renderer.setScene(testScene);
+const canvas = document.getElementById('glcanvas') as HTMLCanvasElement;
+const player = new playerController(0.5);
+
+const moveInput = { forward: 0, right: 0, up: 0 };
 
 let lastTime: number = 0;
 
-const player = new playerController(0.5);
+function resizeCanvas() {
 
-const canvas = document.getElementById('glcanvas') as HTMLCanvasElement;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
+
+    renderer.gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
+function updateMoveInput() {
+
+    moveInput.forward = (pressedKeys.has('KeyW') ? 1 : 0) - (pressedKeys.has('KeyS') ? 1 : 0);
+    moveInput.right = (pressedKeys.has('KeyD') ? 1 : 0) - (pressedKeys.has('KeyA') ? 1 : 0);
+    moveInput.up = (pressedKeys.has('Space') ? 1 : 0) - (pressedKeys.has('ShiftLeft') ? 1 : 0);
+}
+
 function mainLoop(currentTime: number) {
 
     const dt = (currentTime - lastTime) / 1000;
@@ -33,29 +52,10 @@ function mainLoop(currentTime: number) {
 
     requestAnimationFrame(mainLoop);
 }
-function resizeCanvas() {
 
-    const dpr = window.devicePixelRatio || 1;
-
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
-
-    renderer.gl.viewport(0, 0, canvas.width, canvas.height);
-}
+renderer.setScene(testScene);
 resizeCanvas();
-
 requestAnimationFrame(mainLoop);
-
-const moveInput = { forward: 0, right: 0, up: 0 };
-function updateMoveInput() {
-
-    moveInput.forward = (pressedKeys.has('KeyW') ? 1 : 0) - (pressedKeys.has('KeyS') ? 1 : 0);
-    moveInput.right = (pressedKeys.has('KeyD') ? 1 : 0) - (pressedKeys.has('KeyA') ? 1 : 0);
-    moveInput.up = (pressedKeys.has('Space') ? 1 : 0) - (pressedKeys.has('ShiftLeft') ? 1 : 0);
-}
 
 document.addEventListener('keydown', (e) => {
 

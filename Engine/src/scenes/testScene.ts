@@ -50,6 +50,6 @@ for (const [material, filename] of Object.entries(materialToFilename)) {
 export let testScene = new Scene;
 
 const mobileHome = new MultiMaterialObjModel(mobileHomeObjRaw, materialTextures);
-mobileHome.setOrigin([0, 0, 0]);
+mobileHome.setOrigin([-60, 0, 0]);
 
 mobileHome.parts.forEach(part => testScene.addShape(part));

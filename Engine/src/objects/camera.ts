@@ -8,10 +8,10 @@ export class Camera {
     public moveSpeed: number;
 
     constructor(
-        position: vec3 = vec3.fromValues(0.0, 0.0, 5.0),
-        yaw: number = -90,
+        position: vec3 = vec3.fromValues(0.0, 0.0, 0.0),
+        yaw: number = 180,
         pitch: number = 0,
-        moveSpeed: number = 10
+        moveSpeed: number = 35
     ) {
 
         this.position = position;
